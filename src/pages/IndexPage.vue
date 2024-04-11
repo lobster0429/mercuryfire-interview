@@ -4,7 +4,7 @@
       <div class="q-mb-xl">
         <q-input v-model="tempData.name" label="姓名" />
         <q-input v-model="tempData.age" label="年齡" />
-        <q-btn color="primary" class="q-mt-md">新增</q-btn>
+        <q-btn color="primary" class="q-mt-md" @click="addData">新增</q-btn>
       </div>
 
       <q-table
@@ -35,11 +35,21 @@
               :props="props"
               style="min-width: 120px"
             >
-              <div>{{ col.value }}</div>
+              <div v-if="!props.row.editStatus">
+                {{ col.value }}
+              </div>
+              <div v-else>
+                <q-input
+                  v-model="props.row[col.name]"
+                  @blur="cancelEdit(props.rowIndex)"
+                  dense
+                  outlined
+                />
+              </div>
             </q-td>
             <q-td class="text-right" auto-width v-if="tableButtons.length > 0">
               <q-btn
-                @click="handleClickOption(btn, props.row)"
+                @click="handleClickOption(btn, props.row, props.rowIndex)"
                 v-for="(btn, index) in tableButtons"
                 :key="index"
                 size="sm"
@@ -90,6 +100,7 @@ const blockData = ref([
   {
     name: 'test',
     age: 25,
+    editStatus: false,
   },
 ]);
 const tableConfig = ref([
@@ -123,8 +134,31 @@ const tempData = ref({
   name: '',
   age: '',
 });
-function handleClickOption(btn, data) {
-  // ...
+
+function handleClickOption(btn, data, index) {
+  if (btn.status === 'edit') editData(index);
+  if (btn.status === 'delete') deleteData(index);
+}
+function addData() {
+  const data = Object.assign({}, tempData.value);
+  const anyEmpty = Object.values(tempData.value).some((val) => val === '');
+  if (anyEmpty) return false;
+
+  blockData.value.push(data);
+  Object.keys(tempData.value).forEach((key) => {
+    tempData.value[key] = '';
+  });
+}
+
+function deleteData(index) {
+  blockData.value.splice(index, 1);
+}
+
+function editData(index) {
+  blockData.value[index].editStatus = !blockData.value[index].editStatus;
+}
+function cancelEdit(index) {
+  blockData.value[index].editStatus = false;
 }
 </script>
 
